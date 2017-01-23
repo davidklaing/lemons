@@ -16,6 +16,7 @@ library(tidyverse)
 Half the cars are worth \$500, and half are worth \$1000. There is no information asymmetry between buyers and sellers. A given buyer's offer is always equal to the value of the car in question.
 
 ```{r dual_model_no_asym, warning=FALSE}
+set.seed(1)
 lemon_value <- 500
 peach_value <- 1000
 num_cars <- 10000
@@ -24,7 +25,7 @@ market <- market %>%
         mutate(buyer_offer = value) %>%
         mutate(will_it_sell = (buyer_offer >= value))
 market %>% ggplot(aes(x=value)) +
-        geom_histogram(fill = "#e41a1c", bins=20) +
+        geom_histogram(fill = "#e41a1c", bins=50) +
         scale_y_continuous(limits = c(0,5000)) + 
         scale_x_continuous(breaks = c(500,600,700,800,900,1000), limits = c(400,1100)) +
         theme(plot.subtitle = element_text(vjust = 1), 
@@ -37,6 +38,7 @@ ggsave(filename = "../results/dual_market.png")
 dual_no_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", dual_no_asym))
+print(paste0("Scaled market value: ", dual_no_asym/dual_no_asym))
 ```
 
 ## Dual market, partial asymmetry
@@ -44,14 +46,16 @@ print(paste0("Market value: ", dual_no_asym))
 Half the cars are worth \$500, and half are worth \$1000. There is partial information asymmetry between buyers and sellers. A given buyer's offer is randomly sampled from a normal distribution centred at the midpoint between the average value of all cars (\$750) and the true value of the car in question. 
 
 ```{r dual_model_partial_asym}
+set.seed(1)
 for (i in 1:dim(market)[1]) {
-        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/3)
+        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/2)
 }
 market <- market %>% mutate(will_it_sell = (buyer_offer >= value))
 
 dual_part_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", dual_part_asym))
+print(paste0("Scaled market value: ", dual_part_asym/dual_no_asym))
 ```
 
 ## Dual market, complete asymmetry
@@ -59,6 +63,7 @@ print(paste0("Market value: ", dual_part_asym))
 Half the cars are worth \$500, and half are worth \$1000. There is complete information asymmetry between buyers and sellers. A given buyer's offer is always the average value of all cars (\$750). 
 
 ```{r dual_model_full_asym}
+set.seed(1)
 market <- market %>%
         mutate(buyer_offer = mean(value)) %>%
         mutate(will_it_sell = (buyer_offer >= value))
@@ -66,6 +71,7 @@ market <- market %>%
 dual_full_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", dual_full_asym))
+print(paste0("Scaled market value: ", dual_full_asym/dual_no_asym))
 ```
 
 ## Uniform market, no asymmetry
@@ -73,13 +79,14 @@ print(paste0("Market value: ", dual_full_asym))
 The cars are uniformly distributed between \$500 and \$1000. There is no information asymmetry between buyers and sellers. A given buyer's offer is always equal to the value of the car in question.
 
 ```{r unif_model_no_asym, warning=FALSE}
+set.seed(1)
 market <- data.frame(value = seq.int(from = lemon_value, to = peach_value, by = (peach_value-lemon_value)/(num_cars+1)))
 market <- market %>%
         mutate(buyer_offer = value) %>%
         mutate(will_it_sell = (buyer_offer >= value))
 market %>% ggplot(aes(x=value)) +
         geom_histogram(fill = "#e41a1c", bins = 1001) +
-        scale_y_continuous(limits = c(0,5000)) + 
+        scale_y_continuous(limits = c(0,200)) + 
         scale_x_continuous(breaks = c(500,600,700,800,900,1000), limits = c(400,1100)) +
         theme(plot.subtitle = element_text(vjust = 1), 
               plot.caption = element_text(vjust = 1)) +
@@ -91,6 +98,7 @@ ggsave(filename = "../results/uniform_market.png")
 unif_no_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", unif_no_asym))
+print(paste0("Scaled market value: ", unif_no_asym/unif_no_asym))
 ```
 
 ## Uniform market, partial asymmetry
@@ -98,14 +106,16 @@ print(paste0("Market value: ", unif_no_asym))
 The cars are uniformly distributed between \$500 and \$1000. There is partial information asymmetry between buyers and sellers. A given buyer's offer is randomly sampled from a normal distribution centred at the midpoint between the average value of all cars (\$750) and the true value of the car in question.
 
 ```{r unif_model_partial_asym}
+set.seed(1)
 for (i in 1:dim(market)[1]) {
-        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/3)
+        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/2)
 }
 market <- market %>% mutate(will_it_sell = (buyer_offer >= value))
 
 unif_part_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", unif_part_asym))
+print(paste0("Scaled market value: ", unif_part_asym/unif_no_asym))
 ```
 
 ## Uniform market, complete asymmetry
@@ -113,6 +123,7 @@ print(paste0("Market value: ", unif_part_asym))
 The cars are uniformly distributed between \$500 and \$1000. There is complete information asymmetry between buyers and sellers. A given buyer's offer is always the average value of all cars (\$750). 
 
 ```{r unif_model_full_asym}
+set.seed(1)
 market <- market %>%
         mutate(buyer_offer = mean(value)) %>%
         mutate(will_it_sell = (buyer_offer >= value))
@@ -120,6 +131,7 @@ market <- market %>%
 unif_full_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value:", unif_full_asym))
+print(paste0("Scaled market value: ", unif_full_asym/unif_no_asym))
 ```
 
 ## Normal market, no asymmetry
@@ -127,13 +139,14 @@ print(paste0("Market value:", unif_full_asym))
 The cars are normally distributed between \$500 and \$1000. There is no information asymmetry between buyers and sellers. A given buyer's offer is always equal to the value of the car in question.
 
 ```{r norm_model_no_asym, warning=FALSE}
+set.seed(1)
 market <- data.frame(value = rnorm(n = num_cars, mean = mean(c(lemon_value, peach_value)), sd = (peach_value-mean(c(lemon_value, peach_value)))/3))
 market <- market %>%
         mutate(buyer_offer = value) %>%
         mutate(will_it_sell = (buyer_offer >= value))
 market %>% ggplot(aes(x=value)) + 
         geom_histogram(fill = "#e41a1c", bins=30) +
-        scale_y_continuous(limits = c(0,5000)) + 
+        scale_y_continuous(limits = c(0,3500)) + 
         scale_x_continuous(breaks = c(500,600,700,800,900,1000), limits = c(400,1100)) +
         theme(plot.subtitle = element_text(vjust = 1), 
               plot.caption = element_text(vjust = 1)) +
@@ -145,6 +158,7 @@ ggsave(filename = "../results/normal_market.png")
 norm_no_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", norm_no_asym))
+print(paste0("Scaled market value: ", norm_no_asym/unif_no_asym))
 ```
 
 ## Normal market, partial asymmetry
@@ -152,14 +166,16 @@ print(paste0("Market value: ", norm_no_asym))
 The cars are uniformly distributed between \$500 and \$1000. There is partial information asymmetry between buyers and sellers. A given buyer's offer is randomly sampled from a normal distribution centred at the midpoint between the average value of all cars (\$750) and the true value of the car in question.
 
 ```{r norm_model_partial_asym}
+set.seed(1)
 for (i in 1:dim(market)[1]) {
-        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/3)
+        market$buyer_offer[i] <- rnorm(n = 1, mean = mean(c(market$value[i], mean(market$value))), sd = abs(mean(market$value)-market$value[i])/2)
 }
 market <- market %>% mutate(will_it_sell = (buyer_offer >= value))
 
 norm_part_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", norm_part_asym))
+print(paste0("Scaled market value: ", norm_part_asym/unif_no_asym))
 ```
 
 ## Normal market, complete asymmetry
@@ -167,6 +183,7 @@ print(paste0("Market value: ", norm_part_asym))
 The cars are normally distributed between \$500 and \$1000. There is complete information asymmetry between buyers and sellers. A given buyer's offer is always the average value of all cars (\$750). 
 
 ```{r norm_model_full_asym}
+set.seed(1)
 market <- market %>%
         mutate(buyer_offer = mean(value)) %>%
         mutate(will_it_sell = (buyer_offer >= value))
@@ -174,11 +191,13 @@ market <- market %>%
 norm_full_asym <- sum(market$value[market$will_it_sell == TRUE]) - sum(market$value[market$will_it_sell == FALSE])
 
 print(paste0("Market value: ", norm_full_asym))
+print(paste0("Scaled market value: ", norm_full_asym/unif_no_asym))
 ```
 
 ## All markets compared.
 
 ```{r all_markets}
+set.seed(1)
 all_markets <- data.frame(market_dist = c(rep("Dual", 3), rep("Uniform", 3), rep("Normal", 3)), info_asym = c("None", "Partial", "Full", "None", "Partial", "Full", "None", "Partial", "Full"), market_value = c(dual_no_asym/7500000, dual_part_asym/7500000, dual_full_asym/7500000, unif_no_asym/7500000, unif_part_asym/7500000, unif_full_asym/7500000, norm_no_asym/7500000, norm_part_asym/7500000, norm_full_asym/7500000))
 
 all_markets$market_dist <- factor(all_markets$market_dist, levels = c("Dual", "Uniform", "Normal"))
@@ -198,15 +217,6 @@ ggsave(filename = "../results/all_markets.png")
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
+```{r sessionInfo}
+sessionInfo()
+```
